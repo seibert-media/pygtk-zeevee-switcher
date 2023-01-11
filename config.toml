@@ -1,0 +1,15 @@
+[atem]
+ip = '172.19.138.254'
+video_mode = '1080p50'
+
+[atem.settings]
+
+
+[logging]
+# see https://docs.python.org/3/library/logging.html#levels
+level = 10
+format = '%(name)25s [%(levelname)-8s] %(message)s'
+
+[gtk-settings]
+gtk-theme-name = "Adwaita"
+gtk-application-prefer-dark-theme = true
