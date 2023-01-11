@@ -24,7 +24,7 @@ class PyATEMSwitcherGui():
         )
 
         self.window = Gtk.Window()
-        self.window.connect("destroy", Gtk.main_quit)
+        self.window.connect("destroy", self._exit)
 
         self.switcher = switcher
         self.switcher.on_connect(self._switcher_connected)
@@ -38,10 +38,11 @@ class PyATEMSwitcherGui():
         self.window.set_titlebar(self.header)
 
         self.box = None
-        self._switcher_disconnected({})
+        self.buttons = {}
 
-        # TODO use connection hooks
-        self._switcher_connected({})
+    def _exit(self, *args, **kwargs):
+        self.switcher.disconnect()
+        Gtk.main_quit(*args, **kwargs)
 
     def _button_clicked(self, button, name):
         # TODO actually do something
@@ -93,7 +94,7 @@ class PyATEMSwitcherGui():
         return True
 
     def main_loop(self):
-        # TODO connect to switcher
+        self.switcher.connect()
         self.window.show_all()
         GObject.timeout_add(500, self._switcher_ping)
         Gtk.main()
