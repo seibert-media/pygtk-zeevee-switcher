@@ -19,6 +19,7 @@ class PyATEMSwitcher:
         self._connect_subscribers = []
         self._connect_attempt_subscribers = []
         self._disconnect_subscribers = []
+        self._receive_subscribers = []
 
         self._validate_config()
 
@@ -33,6 +34,10 @@ class PyATEMSwitcher:
         self.atem.registerEvent(
             self.atem.atem.events.disconnect,
             self._on_disconnect,
+        )
+        self.atem.registerEvent(
+            self.atem.atem.events.receive,
+            self._on_receive,
         )
 
     def _on_connect(self, params):
@@ -50,6 +55,11 @@ class PyATEMSwitcher:
         self.log.debug(f'_on_disconnect({repr(params)})')
         for callback in self._disconnect_subscribers:
             callback(params['switcher'])
+
+    def _on_receive(self, params):
+        self.log.debug(f'_on_receive({repr(params)})')
+        for callback in self._receive_subscribers:
+            callback(params)
 
     def _push_config(self):
         conf = self.config.get('settings', {})
@@ -94,6 +104,9 @@ class PyATEMSwitcher:
 
     def on_disconnect(self, callback):
         self._disconnect_subscribers.append(callback)
+
+    def on_receive(self, callback):
+        self._receive_subscribers.append(callback)
 
     def trans(self, input):
         self.log.debug(f'hehehehe trans({repr(input)})')
