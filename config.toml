@@ -1,5 +1,5 @@
 [atem]
-ip = '172.19.138.254'
+ip = '10.73.96.40'
 video_mode = '1080p50'
 
 [atem.settings]
