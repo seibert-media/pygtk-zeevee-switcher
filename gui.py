@@ -30,6 +30,8 @@ class PyATEMSwitcherGui():
         self.switcher.on_connect(self._switcher_connected)
         self.switcher.on_connect_attempt(self._switcher_connect_attempt)
         self.switcher.on_disconnect(self._switcher_disconnected)
+
+        self.switcher.on_connect(self._switcher_state_changed)
         self.switcher.on_receive(self._switcher_state_changed)
 
         self.window.set_border_width(BUTTON_SPACING)
@@ -58,14 +60,15 @@ class PyATEMSwitcherGui():
                 ctx.remove_class('selected')
 
     def _switcher_connected(self, params):
+        switcher = params['switcher']
         log = logging.getLogger('GUI connected')
 
         log.debug(f'_switcher_connected({params})')
-        log.info(f'Connected to "{params.atemModel}" @ {params.ip}')
-        self.header.props.title = f'{params.atemModel} @ {params.ip}'
+        log.info(f'Connected to "{switcher.atemModel}" @ {switcher.ip}')
+        self.header.props.title = f'{switcher.atemModel} @ {switcher.ip}'
 
         inputs = {}
-        for idx,i in enumerate(params.inputProperties):
+        for idx,i in enumerate(switcher.inputProperties):
             if not i.shortName:
                 break
             log.debug(f'Creating Button for {i.shortName} of type {i.externalPortType}: {i.longName}')
@@ -81,8 +84,6 @@ class PyATEMSwitcherGui():
             self.buttons[f'in_{i.shortName}'] = (btn, idx)
             inputs.setdefault(str(i.externalPortType), []).append(btn)
 
-        log.debug(repr(inputs))
-
         log.debug('Creating vertically stacked box as container')
         self.box = Gtk.VBox(spacing=BUTTON_SPACING)
 
@@ -90,19 +91,10 @@ class PyATEMSwitcherGui():
             if input_type not in inputs:
                 continue
 
-#            log.debug(f'Creating FlowBox for {input_type} buttons')
-#            flowbox = Gtk.VBox()
-#            flowbox.set_column_spacing(BUTTON_SPACING)
-#            flowbox.set_max_children_per_line(2)
-#            flowbox.set_row_spacing(BUTTON_SPACING)
-#            flowbox.set_selection_mode(Gtk.SelectionMode.NONE)
-#            flowbox.set_valign(Gtk.Align.START)
-
             for btn in inputs[input_type]:
                 self.box.pack_start(btn, True, True, 0)
-            #self.box.pack_start(flowbox, True, True, 0)
 
-        log.debug('All FlowBoxes added, adding box to window')
+        log.debug('All buttons added, adding box to window')
         self.window.add(self.box)
         self.window.show_all()
         self.log.debug('done')
@@ -118,15 +110,28 @@ class PyATEMSwitcherGui():
         self.header.props.title = 'PyATEMSwitcherGui: Not connected'
 
     def _switcher_state_changed(self, params):
-        source = params['switcher'].programInput[0].videoSource
-        sn = params['switcher'].inputProperties[source].shortName
-        for btn in self.buttons:
-            ctx = self.buttons[btn][0].get_style_context()
-            if btn == f'in_{sn}':
-                ctx.add_class('program')
-            else:
-                ctx.remove_class('program')
-            ctx.remove_class('selected')
+        cmd = params.get('cmd', 'PrgI')
+
+        if cmd in ('PrgI', 'PrvI'):
+            pgm = params['switcher'].programInput[0].videoSource
+            prv = params['switcher'].previewInput[0].videoSource
+            pgm_n = params['switcher'].inputProperties[pgm].shortName
+            prv_n = params['switcher'].inputProperties[prv].shortName
+            for btn in self.buttons:
+                ctx = self.buttons[btn][0].get_style_context()
+                if btn == f'in_{pgm_n}':
+                    ctx.add_class('program')
+                else:
+                    ctx.remove_class('program')
+                if btn == f'in_{prv_n}' and pgm != prv:
+                    ctx.add_class('preview')
+                else:
+                    ctx.remove_class('preview')
+                ctx.remove_class('selected')
+        elif cmd == 'TrPs' and params['switcher'].transition[0].position == 0:
+            for btn in self.buttons:
+                ctx = self.buttons[btn][0].get_style_context()
+                ctx.remove_class('preview')
 
     def main_loop(self):
         self.switcher.connect()

@@ -44,17 +44,17 @@ class PyATEMSwitcher:
         self.log.debug(f'_on_connect({repr(params)})')
         self._push_config()
         for callback in self._connect_subscribers:
-            callback(params['switcher'])
+            callback(params)
 
     def _on_connect_attempt(self, params):
         self.log.debug(f'_on_connect_attempt({repr(params)})')
         for callback in self._connect_attempt_subscribers:
-            callback(params['switcher'])
+            callback(params)
 
     def _on_disconnect(self, params):
         self.log.debug(f'_on_disconnect({repr(params)})')
         for callback in self._disconnect_subscribers:
-            callback(params['switcher'])
+            callback(params)
 
     def _on_receive(self, params):
         self.log.debug(f'_on_receive({repr(params)})')
@@ -110,7 +110,9 @@ class PyATEMSwitcher:
 
     def trans(self, input):
         self.log.debug(f'hehehehe trans({repr(input)})')
-        self.atem.setProgramInputVideoSource(
+        self.atem.setPreviewInputVideoSource(
             ATEMTransitionStyles.mix,
             input,
         )
+        self.atem.setTransitionMixRate(0, 10)
+        self.atem.execAutoME(0)
