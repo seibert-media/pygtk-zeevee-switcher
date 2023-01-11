@@ -36,20 +36,20 @@ class PyATEMSwitcher:
         )
 
     def _on_connect(self, params):
-        logging.debug(f'_on_connect({repr(params)})')
+        self.log.debug(f'_on_connect({repr(params)})')
         self._push_config()
         for callback in self._connect_subscribers:
-            callback(params)
+            callback(params['switcher'])
 
     def _on_connect_attempt(self, params):
-        logging.debug(f'_on_connect_attempt({repr(params)})')
+        self.log.debug(f'_on_connect_attempt({repr(params)})')
         for callback in self._connect_attempt_subscribers:
-            callback(params)
+            callback(params['switcher'])
 
     def _on_disconnect(self, params):
-        logging.debug(f'_on_disconnect({repr(params)})')
+        self.log.debug(f'_on_disconnect({repr(params)})')
         for callback in self._disconnect_subscribers:
-            callback(params)
+            callback(params['switcher'])
 
     def _push_config(self):
         conf = self.config.get('settings', {})
@@ -61,7 +61,7 @@ class PyATEMSwitcher:
         if 'video_mode' in self.config:
             video_mode = getattr(
                 ATEMVideoModeFormats,
-                'f'+self.config['video_format'],
+                'f'+self.config['video_mode'],
             )
             if self.atem.videoMode.format != video_mode:
                 self.atem.setVideoModeFormat(video_mode)
@@ -84,7 +84,7 @@ class PyATEMSwitcher:
         self.atem.connect(self.config['ip'])
 
     def disconnect(self):
-        raise NotImplementedError
+        self.atem.disconnect()
 
     def on_connect(self, callback):
         self._connect_subscribers.append(callback)
