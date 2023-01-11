@@ -1,0 +1,19 @@
+button {
+    padding: 1em;
+    font-size: 1.5em;
+}
+
+button.program {
+    background: #800000;
+    color: #FFFFFF;
+}
+
+button.preview {
+    background: #008000;
+    color: #FFFFFF;
+}
+
+button.selected {
+  box-shadow: 0 0 0.3em #800000;
+  text-shadow: 0 0 0.3em #800000;
+}

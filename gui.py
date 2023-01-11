@@ -3,7 +3,7 @@ import gi
 gi.require_version('Gtk', '3.0')
 import logging
 
-from gi.repository import GObject, Gtk
+from gi.repository import GObject, Gtk, Gdk
 
 BUTTON_SPACING = 10
 
@@ -12,8 +12,20 @@ class PyATEMSwitcherGui():
     def __init__(self, config, switcher):
         self.log = logging.getLogger('GUI')
         self.config = config
+
+        cssProvider = Gtk.CssProvider()
+        cssProvider.load_from_path('style.css')
+        screen = Gdk.Screen.get_default()
+        styleContext = Gtk.StyleContext()
+        styleContext.add_provider_for_screen(
+            screen,
+            cssProvider,
+            Gtk.STYLE_PROVIDER_PRIORITY_USER,
+        )
+
         self.window = Gtk.Window()
         self.window.connect("destroy", Gtk.main_quit)
+
         self.switcher = switcher
         self.switcher.on_connect(self._switcher_connected)
         self.switcher.on_connect_attempt(self._switcher_connect_attempt)
@@ -25,16 +37,23 @@ class PyATEMSwitcherGui():
         self.header.props.title = 'PyATEMSwitcherGui: Idle'
         self.window.set_titlebar(self.header)
 
-        self.buttons = {}
         self.box = None
+        self._switcher_disconnected({})
 
         # TODO use connection hooks
         self._switcher_connected({})
 
     def _button_clicked(self, button, name):
         # TODO actually do something
-        self.header.props.title = f'PyATEMSwitcherGui: {name}'
         self.log.info(f'Button {name} was pressed')
+        for btn in self.buttons:
+            ctx = self.buttons[btn].get_style_context()
+            if btn == name:
+                self.log.debug(f'{btn}.add_class("selected")')
+                ctx.add_class('selected')
+            else:
+                self.log.debug(f'{btn}.remove_class("selected")')
+                ctx.remove_class('selected')
 
     def _switcher_connected(self, params):
         self.box = Gtk.FlowBox()
@@ -59,13 +78,14 @@ class PyATEMSwitcherGui():
         self.window.add(self.box)
 
     def _switcher_connect_attempt(self, params):
-        pass
+        self.header.props.title = 'PyATEMSwitcherGui: Connecting ...'
 
     def _switcher_disconnected(self, params):
         if self.box is not None:
             self.window.remove(self.box)
         self.box = None
         self.buttons = {}
+        self.header.props.title = 'PyATEMSwitcherGui: Not connected'
 
     def _switcher_ping(self):
         # TODO actually do something here

@@ -1,7 +1,7 @@
 import logging
 
 import PyATEMMax
-from PyATEMMax.ATEMProtocolEnums import ATEMVideoModeFormats
+from PyATEMMax.ATEMProtocolEnums import ATEMVideoModeFormats, ATEMTransitionStyles
 
 VIDEO_FORMATS = {
     f[1:]
@@ -98,6 +98,6 @@ class PyATEMSwitcher:
     def trans(self, input):
         self.log.debug(f'hehehehe trans({repr(input)})')
         self.atem.setProgramInputVideoSource(
-            # TODO mixEffect,
+            ATEMTransitionStyles.mix,
             input,
         )
