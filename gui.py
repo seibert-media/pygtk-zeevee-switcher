@@ -26,6 +26,8 @@ class PyATEMSwitcherGui():
         self.window = Gtk.Window()
         self.window.connect("destroy", self._exit)
 
+        self.window.set_wmclass('pygtk-atem-switcher', 'PyGTK-ATEM-Switcher')
+
         self.switcher = switcher
         self.switcher.on_connect(self._switcher_connected)
         self.switcher.on_connect_attempt(self._switcher_connect_attempt)
@@ -71,6 +73,8 @@ class PyATEMSwitcherGui():
         for idx,i in enumerate(switcher.inputProperties):
             if not i.shortName:
                 break
+            if i.shortName.lower() in ('-', 'empty', 'x'):
+                continue
             log.debug(f'Creating Button for {i.shortName} of type {i.externalPortType}: {i.longName}')
             btn = Gtk.Button.new_with_label(
                 i.longName
