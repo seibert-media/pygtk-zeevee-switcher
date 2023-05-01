@@ -71,15 +71,18 @@ class PyATEMSwitcher:
                 self.atem.setVideoModeFormat(video_mode)
 
         if conf.get("inputs", None):
-            try:
-                for key, name in conf["inputs"].items():
+            for key, name in conf["inputs"].items():
+                try:
                     input_number = getattr(self.atem.atem.videoSources, key)
+                    long_name = self.atem.inputProperties[input_number].longName
+                    if name == long_name:
+                        continue
                     self.log.debug(f"setting input {input_number} to name '{name}'")
                     self.atem.setInputLongName(input_number, name)
                     self.atem.setInputShortName(input_number, name[0:4].upper())
-            except Exception as e:
-                self.log.error("An error occurred while trying to adjust input names")
-                self.log.exception(e)
+                except Exception as e:
+                    self.log.error("An error occurred while trying to adjust input names")
+                    self.log.exception(e)
 
     def _validate_config(self):
         if "ip" not in self.config:
