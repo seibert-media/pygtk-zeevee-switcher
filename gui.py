@@ -5,7 +5,7 @@ import logging
 
 from gi.repository import GObject, Gtk, Gdk
 
-BUTTON_SPACING = 10
+BUTTON_SPACING = 5
 
 
 class PyATEMSwitcherGui():
