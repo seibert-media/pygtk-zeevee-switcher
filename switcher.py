@@ -1,8 +1,7 @@
 import logging
 
 import PyATEMMax
-from PyATEMMax.ATEMProtocolEnums import (ATEMTransitionStyles,
-                                         ATEMVideoModeFormats)
+from PyATEMMax.ATEMProtocolEnums import ATEMTransitionStyles, ATEMVideoModeFormats
 
 VIDEO_FORMATS = {f[1:] for f in dir(ATEMVideoModeFormats) if f.startswith("f")}
 
@@ -81,7 +80,9 @@ class PyATEMSwitcher:
                     self.atem.setInputLongName(input_number, name)
                     self.atem.setInputShortName(input_number, name[0:4].upper())
                 except Exception as e:
-                    self.log.error("An error occurred while trying to adjust input names")
+                    self.log.error(
+                        "An error occurred while trying to adjust input names"
+                    )
                     self.log.exception(e)
 
     def _validate_config(self):
