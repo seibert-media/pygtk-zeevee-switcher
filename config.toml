@@ -3,21 +3,10 @@ ip = "10.73.4.40"
 video_mode = "1080p25"
 
 [atem.settings.inputs]
-1 = "Laptop"
-2 = "Kamera"
-3 = "VGA"
-4 = "Infobeamer"
-# 5 ... 40 further HDMI/SDI Inputs
-# 1000 = 'colorBars'
-# 2001 = 'color1'
-# 2002 = 'color2'
-# 3010 = 'mediaPlayer1'
-# 3011 = 'mediaPlayer1Key'
-# 3020 .. 3040 further media players
-# 3021 .. 3041 further media plaer keys
-# 4010 = 'key1Mask'
-# ... and a gazillion more inputs
-
+input1 = "Laptop"
+input3 = "Kamera"
+input2 = "VGA"
+input4 = "Infobeamer"
 
 [gtk-settings]
 gtk-application-prefer-dark-theme = true
