@@ -76,7 +76,7 @@ class PyATEMSwitcherGui():
             if i.shortName.lower() in ('-', 'empty', 'x'):
                 continue
             if f'in_{i.shortName}' in self.buttons:
-                log.warning(f'ignoring duplicate button {i.shortName)')
+                log.warning(f'ignoring duplicate button {i.shortName}')
                 continue
             log.debug(f'Creating Button for {i.shortName} of type {i.externalPortType}: {i.longName}')
             btn = Gtk.Button.new_with_label(
