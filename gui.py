@@ -69,6 +69,14 @@ class PyATEMSwitcherGui():
         log.info(f'Connected to "{switcher.atemModel}" @ {switcher.ip}')
         self.header.props.title = f'{switcher.atemModel} @ {switcher.ip}'
 
+        if self.box is not None:
+            log.debug('Removing old VBox from window')
+            self.window.remove(self.box)
+        self.window.show_all()
+        self.box = None
+        self.buttons = {}
+        log.debug('Button state cleared, creating buttons')
+
         inputs = {}
         for idx,i in enumerate(switcher.inputProperties):
             if not i.shortName:
@@ -77,6 +85,7 @@ class PyATEMSwitcherGui():
                 continue
             if f'in_{i.shortName}' in self.buttons:
                 log.warning(f'ignoring duplicate button {i.shortName}')
+                log.debug(self.buttons)
                 continue
             log.debug(f'Creating Button for {i.shortName} of type {i.externalPortType}: {i.longName}')
             btn = Gtk.Button.new_with_label(
@@ -114,6 +123,7 @@ class PyATEMSwitcherGui():
             self.window.remove(self.box)
         self.box = None
         self.buttons = {}
+        self.window.show_all()
         self.header.props.title = 'PyATEMSwitcherGui: Not connected'
 
     def _switcher_state_changed(self, params):
@@ -139,6 +149,19 @@ class PyATEMSwitcherGui():
             for btn in self.buttons:
                 ctx = self.buttons[btn][0].get_style_context()
                 ctx.remove_class('preview')
+        elif cmd == 'InPr':
+            for idx,i in enumerate(params['switcher'].inputProperties):
+                if not i.shortName:
+                    break
+                if (
+                    f'in_{i.shortName}' not in self.buttons
+                    or i.shortName.lower() in ('-', 'empty', 'x')
+                ):
+                    self.log.warning(f'amount of buttons changed, re-drawing the window')
+                    self._switcher_connected(params)
+                else:
+                    self.log.info(f'setting label for button {i.shortName} to: {i.longName}')
+                    self.buttons[f'in_{i.shortName}'][0].set_label(str(i.longName))
 
     def main_loop(self):
         self.switcher.connect()
