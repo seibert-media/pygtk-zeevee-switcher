@@ -2,13 +2,14 @@ import gi
 
 gi.require_version('Gtk', '3.0')
 import logging
+from threading import Lock
 
-from gi.repository import GObject, Gtk, Gdk
+from gi.repository import Gdk, GObject, Gtk
 
 BUTTON_SPACING = 5
 
 
-class PyATEMSwitcherGui():
+class PyATEMSwitcherGui:
     def __init__(self, config, switcher):
         self.log = logging.getLogger('GUI')
         self.config = config
@@ -42,6 +43,7 @@ class PyATEMSwitcherGui():
         self.header.props.title = 'PyATEMSwitcherGui: Idle'
         self.window.set_titlebar(self.header)
 
+        self.redraw_lock = Lock()
         self.box = None
         self.buttons = {}
 
@@ -51,15 +53,16 @@ class PyATEMSwitcherGui():
 
     def _button_clicked(self, button, name):
         self.log.info(f'Button {name} was pressed')
-        for btn in self.buttons:
-            ctx = self.buttons[btn][0].get_style_context()
-            if btn == name:
-                self.log.debug(f'{btn}.add_class("selected")')
-                ctx.add_class('selected')
-                self.switcher.trans(self.buttons[btn][1])
-            else:
-                self.log.debug(f'{btn}.remove_class("selected")')
-                ctx.remove_class('selected')
+        with self.redraw_lock:
+            for btn in self.buttons:
+                ctx = self.buttons[btn][0].get_style_context()
+                if btn == name:
+                    self.log.debug(f'{btn}.add_class("selected")')
+                    ctx.add_class('selected')
+                    self.switcher.trans(self.buttons[btn][1])
+                else:
+                    self.log.debug(f'{btn}.remove_class("selected")')
+                    ctx.remove_class('selected')
 
     def _switcher_connected(self, params):
         switcher = params['switcher']
@@ -69,61 +72,63 @@ class PyATEMSwitcherGui():
         log.info(f'Connected to "{switcher.atemModel}" @ {switcher.ip}')
         self.header.props.title = f'{switcher.atemModel} @ {switcher.ip}'
 
-        if self.box is not None:
-            log.debug('Removing old VBox from window')
-            self.window.remove(self.box)
-        self.window.show_all()
-        self.box = None
-        self.buttons = {}
-        log.debug('Button state cleared, creating buttons')
+        with self.redraw_lock:
+            if self.box is not None:
+                log.debug('Removing old VBox from window')
+                self.window.remove(self.box)
+            self.window.show_all()
+            self.box = None
+            self.buttons = {}
+            log.debug('Button state cleared, creating buttons')
 
-        inputs = {}
-        for idx,i in enumerate(switcher.inputProperties):
-            if not i.shortName:
-                break
-            if i.shortName.lower() in ('-', 'empty', 'x'):
-                continue
-            if f'in_{i.shortName}' in self.buttons:
-                log.warning(f'ignoring duplicate button {i.shortName}')
-                log.debug(self.buttons)
-                continue
-            log.debug(f'Creating Button for {i.shortName} of type {i.externalPortType}: {i.longName}')
-            btn = Gtk.Button.new_with_label(
-                i.longName
-            )
-            btn.connect(
-                'clicked',
-                self._button_clicked,
-                f'in_{i.shortName}',
-            )
-            log.debug(f'Adding {i.shortName} to FlowBox')
-            self.buttons[f'in_{i.shortName}'] = (btn, idx)
-            inputs.setdefault(str(i.externalPortType), []).append(btn)
+            inputs = {}
+            for idx, i in enumerate(switcher.inputProperties):
+                if not i.shortName:
+                    break
+                if i.shortName.lower() in ('-', 'empty', 'x'):
+                    continue
+                if f'in_{i.shortName}' in self.buttons:
+                    log.warning(f'ignoring duplicate button {i.shortName}')
+                    log.debug(self.buttons)
+                    continue
+                log.debug(
+                    f'Creating Button for {i.shortName} of type {i.externalPortType}: {i.longName}'
+                )
+                btn = Gtk.Button.new_with_label(i.longName)
+                btn.connect(
+                    'clicked',
+                    self._button_clicked,
+                    f'in_{i.shortName}',
+                )
+                log.debug(f'Adding {i.shortName} to FlowBox')
+                self.buttons[f'in_{i.shortName}'] = (btn, idx)
+                inputs.setdefault(str(i.externalPortType), []).append(btn)
 
-        log.debug('Creating vertically stacked box as container')
-        self.box = Gtk.VBox(spacing=BUTTON_SPACING)
+            log.debug('Creating vertically stacked box as container')
+            self.box = Gtk.VBox(spacing=BUTTON_SPACING)
 
-        for input_type in ('hdmi', 'sdi', 'internal'):
-            if input_type not in inputs:
-                continue
+            for input_type in ('hdmi', 'sdi', 'internal'):
+                if input_type not in inputs:
+                    continue
 
-            for btn in inputs[input_type]:
-                self.box.pack_start(btn, True, True, 0)
+                for btn in inputs[input_type]:
+                    self.box.pack_start(btn, True, True, 0)
 
-        log.debug('All buttons added, adding box to window')
-        self.window.add(self.box)
-        self.window.show_all()
-        self.log.debug('done')
+            log.debug('All buttons added, adding box to window')
+            self.window.add(self.box)
+            self.window.show_all()
+            self.log.debug('done')
 
     def _switcher_connect_attempt(self, params):
         self.header.props.title = 'PyATEMSwitcherGui: Connecting ...'
 
     def _switcher_disconnected(self, params):
-        if self.box is not None:
-            self.window.remove(self.box)
-        self.box = None
-        self.buttons = {}
-        self.window.show_all()
+        with self, redraw_lock:
+            if self.box is not None:
+                self.window.remove(self.box)
+            self.box = None
+            self.buttons = {}
+            self.window.show_all()
         self.header.props.title = 'PyATEMSwitcherGui: Not connected'
 
     def _switcher_state_changed(self, params):
@@ -150,18 +155,26 @@ class PyATEMSwitcherGui():
                 ctx = self.buttons[btn][0].get_style_context()
                 ctx.remove_class('preview')
         elif cmd == 'InPr':
-            for idx,i in enumerate(params['switcher'].inputProperties):
+            for idx, i in enumerate(params['switcher'].inputProperties):
                 if not i.shortName:
                     break
                 if (
                     f'in_{i.shortName}' not in self.buttons
                     or i.shortName.lower() in ('-', 'empty', 'x')
+                    or self.buttons[f'in_{i.shortName}'][1] != idx
                 ):
-                    self.log.warning(f'amount of buttons changed, re-drawing the window')
+                    self.log.warning(
+                        f'amount of buttons changed, re-drawing the window'
+                    )
                     self._switcher_connected(params)
-                else:
-                    self.log.info(f'setting label for button {i.shortName} to: {i.longName}')
-                    self.buttons[f'in_{i.shortName}'][0].set_label(str(i.longName))
+                elif self.buttons[f'in_{i.shortName}'][0].get_label() != str(
+                    i.longName
+                ):
+                    with self.redraw_lock:
+                        self.log.info(
+                            f'setting label for button {i.shortName} to: {i.longName}'
+                        )
+                        self.buttons[f'in_{i.shortName}'][0].set_label(str(i.longName))
 
     def main_loop(self):
         self.switcher.connect()
