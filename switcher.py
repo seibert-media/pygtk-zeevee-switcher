@@ -2,7 +2,7 @@ import logging
 
 import PyATEMMax
 from PyATEMMax.ATEMProtocolEnums import ATEMVideoModeFormats, ATEMTransitionStyles
-
+from rich import inspect
 VIDEO_FORMATS = {
     f[1:]
     for f in dir(ATEMVideoModeFormats)
@@ -74,11 +74,12 @@ class PyATEMSwitcher:
                 self.atem.setVideoModeFormat(video_mode)
         
         if conf.get('inputs', None):
-            for i in range(1,5):
-                input_name = conf['inputs'][f'hdmi{i}']
-                self.log.debug(f"setting input {i} to name '{input_name}'")
-                self.atem.setInputLongName(i, input_name)
-                self.atem.setInputShortName(i, input_name[0:3])
+            for inp in self.atem.atem.videoSources:
+                if conf['inputs'].get(inp.value, None):
+                    new_name = conf['inputs'][inp.value]
+                    self.log.debug(f"setting input {inp.value} to name '{new_name}'")
+                    self.atem.setInputLongName(inp.value, new_name)
+                    self.atem.setInputShortName(inp.value, new_name[0:3])
 
     def _validate_config(self):
         if 'ip' not in self.config:
