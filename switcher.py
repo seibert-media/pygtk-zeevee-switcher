@@ -63,9 +63,6 @@ class PyATEMSwitcher:
 
     def _push_config(self):
         conf = self.config.get('settings', {})
-
-        # TODO setInputLongName
-        # TODO setInputShortName
         # TODO media upload to MP1
 
         if 'video_mode' in self.config:
@@ -75,6 +72,13 @@ class PyATEMSwitcher:
             )
             if self.atem.videoMode.format != video_mode:
                 self.atem.setVideoModeFormat(video_mode)
+        
+        if conf.get('inputs', None):
+            for i in range(1,5):
+                input_name = conf['inputs'][f'hdmi{i}']
+                self.log.debug(f"setting input {i} to name '{input_name}'")
+                self.atem.setInputLongName(i, input_name)
+                self.atem.setInputShortName(i, input_name[0:3])
 
     def _validate_config(self):
         if 'ip' not in self.config:
