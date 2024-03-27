@@ -1,0 +1,22 @@
+[mqtt]
+host = "iot-mosquitto.smedia-2.gce.smhss.de"
+username = ""
+password = ""
+command_topic = "rooms/HQ/Eventspace/confidence/media/command"
+state_topic = "rooms/HQ/Eventspace/confidence/media/status"
+
+[inputs]
+EventSpaceAppleTv = "AppleTV"
+EventSpaceChromeCast = "ChromeCast"
+EventSpaceHdmiBuehne = "HDMI Bühne"
+EventSpaceHdmiRegie = "HDMI Regie"
+InfoBeamerEventspace = "Infobeamer"
+EventspaceEncoderOut = "OBS Playout"
+
+[gtk-settings]
+gtk-application-prefer-dark-theme = true
+gtk-theme-name = "Adwaita"
+
+[logging]
+format = "%(name)25s [%(levelname)-8s] %(message)s"
+level = "DEBUG"

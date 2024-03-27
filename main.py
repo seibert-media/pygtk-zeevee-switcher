@@ -10,8 +10,8 @@ from os import environ
 from gi.repository import Gtk
 from rtoml import load
 
-from gui import PyATEMSwitcherGui
-from switcher import PyATEMSwitcher
+from gui import ZeeveeSwitcherGui
+from switcher import ZeeveeSwitcher
 
 LOGLEVELS = {
     "debug": logging.DEBUG,
@@ -22,7 +22,7 @@ LOGLEVELS = {
 
 
 def main():
-    with open(environ.get("PYATEMSWITCHER_CONFIG", "config.toml")) as f:
+    with open(environ.get("SWITCHER_CONFIG", "config.toml")) as f:
         config = load(f)
 
     settings = Gtk.Settings.get_default()
@@ -33,9 +33,9 @@ def main():
 
     logging.basicConfig(**config.get("logging", {}))
 
-    switcher = PyATEMSwitcher(config)
+    switcher = ZeeveeSwitcher(config)
 
-    gui = PyATEMSwitcherGui(config, switcher)
+    gui = ZeeveeSwitcherGui(config, switcher)
     gui.main_loop()
 
 
