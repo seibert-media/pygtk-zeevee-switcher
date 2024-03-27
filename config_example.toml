@@ -2,7 +2,9 @@
 host = "iot-mosquitto.smedia-2.gce.smhss.de"
 username = ""
 password = ""
-command_topic = "rooms/HQ/Eventspace/confidence/media/command"
+command_topics = [
+    "rooms/HQ/Eventspace/confidence/media/command",
+]
 state_topic = "rooms/HQ/Eventspace/confidence/media/status"
 
 [inputs]

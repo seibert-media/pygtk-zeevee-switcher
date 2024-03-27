@@ -58,6 +58,7 @@ class ZeeveeSwitcher:
     def trans(self, input):
         self.log.debug(f"trans({repr(input)})")
         try:
-            self.mqtt.publish(self.config['command_topic'], input)
+            for topic in self.config['command_topics']:
+                self.mqtt.publish(topic, input)
         except Exception:
             self.log.exception('could not change input')
