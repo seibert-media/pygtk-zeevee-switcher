@@ -2,6 +2,8 @@
 host = "iot-mosquitto.smedia-2.gce.smhss.de"
 username = ""
 password = ""
+# optional: connect via TLS, port then defaults to 8883
+#tls = true
 command_topics = [
     "rooms/HQ/Eventspace/confidence/media/command",
 ]
