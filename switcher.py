@@ -37,7 +37,13 @@ class ZeeveeSwitcher:
         self.log.info("initiating connection to MQTT server")
         if self.config.get('username') and self.config.get('password'):
             self.mqtt.username_pw_set(self.config['username'], self.config['password'])
-        self.mqtt.connect(self.config['host'], self.config.get('port', 1883), 60)
+        if self.config.get('tls', False):
+            # verifies certificate and hostname against the system CAs
+            self.mqtt.tls_set()
+            default_port = 8883
+        else:
+            default_port = 1883
+        self.mqtt.connect(self.config['host'], self.config.get('port', default_port), 60)
         self.mqtt.loop_start()
         self.log.info('connection active')
 
